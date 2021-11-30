@@ -89,10 +89,12 @@
 
 (def sample-g
   {:nodes [tictactoe-root]
-   :edges #{}
-   :leaf-index 0})
+   :edges {}
+   :leaf-indices [0]})
 
 (minimax/expand sample-g)
+
+(iterate minimax/expand sample-g)
 
 (minimax/expand *1)
 
