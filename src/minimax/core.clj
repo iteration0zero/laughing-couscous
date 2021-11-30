@@ -34,11 +34,25 @@
            :is-terminal?
             (fn [this]
               (or
-                (= 1 (Math/abs (evaluate this)))
+                (= 1.0 (Math/abs (evaluate this)))
                 (let [board-size (count (:board (state this)))
                       board-matrix (dge board-size board-size (:board (state this)))]
-                  (= (* board-size board-size)
+                  (= (* board-size board-size 1.0)
                      (sum (fmap abs board-matrix))))))}))
+
+(defn get-anti-diagonal-for-dim [dim]
+  (dge dim dim
+      (for [n (range dim)]
+        (assoc (into [] (repeat dim 0)) (- dim 1 n) 1))
+      {:layout :row}))
+
+(defn get-submatrices [m sm-dim]
+  (doall
+    (map (fn [[y x]]
+           (submatrix m y x (+ y sm-dim) (+ x sm-dim)))
+         (for [y (range (inc (- (mrows m) sm-dim)))
+               x (range (inc (- (ncols m) sm-dim)))]
+           [y x]))))
 
 (defn n-in-a-row-state-evaluation [n t]
   (extend t
@@ -61,68 +75,81 @@
                                         col-checks (map dot (repeat row-v-tm-v) column-vs)
                                         diag-check (sum (dia board-submatrix))
                                         anti-diag-check (sum (dia (mm anti-diagonal board-submatrix)))
-                                        check-v (some #(>= n (Math/abs %))
-                                                      (concat row-checks col-checks [diag-check anti-diag-check]))]
-                                     (/ check-v
-                                        (max (Math/abs check-v)) 1)))
+                                        check-v (or (first (filter #(>= (Math/abs %) n)
+                                                                   (concat row-checks col-checks [diag-check anti-diag-check])))
+                                                    0)]
+                                    (/ check-v
+                                       n)))
                                 board-submatrices))]
-                 (or (some #(>= n (Math/abs %))
-                           submatrix-checks)
-                     0)))}))
+                  (first (sort-by #(Math/abs %) >
+                                  submatrix-checks))))}))
+
 
 (n-in-a-row-state-extension 3 TicTacToeNode)
 (n-in-a-row-state-evaluation 3 TicTacToeNode)
 
-(def tictactoe-root (->SampleMinimaxNode
-                      [[0 0 0]
-                       [0 0 0]
-                       [0 0 0]]
-                      1))
-
-(defn get-submatrices [m sm-dim]
-  (doall
-    (map (fn [[y x]]
-           (submatrix a y x (+ y sm-dim) (+ x sm-dim)))
-         (for [y (range (- (mrows m) sm-dim))
-               x (range (- (ncols m) sm-dim))]
-           [y x]))))
+(def tictactoe-root (assoc (->SampleMinimaxNode
+                             [[0 0 0]
+                              [0 0 0]
+                              [0 0 0]]
+                             1)
+                           :v -1))
 
 (def sample-g
   {:nodes [tictactoe-root]
    :edges {}
    :leaf-indices [0]})
 
-(minimax/expand sample-g)
+(def test-g
+  {:nodes [(assoc (->SampleMinimaxNode
+                    [[0 1 0]
+                     [0 1 0]
+                     [0 0 0]]
+                    1)
+                  :v -1)]
+   :edges {}
+   :leaf-indices [0]})
 
-(iterate minimax/expand sample-g)
+(comment
+  (minimax/expand sample-g)
 
-(minimax/expand *1)
+  (minimax/expand test-g)
+  (last (take 10 (iterate minimax/expand sample-expanded-g)))
 
-(def x (dv 1 1 1))
+  (def sample-expanded-g *1)
 
-(def e1 (dv 1 0 0))
-(def e2 (dv 0 1 0))
-(def e3 (dv 0 0 1))
+  (get-in sample-expanded-g [:nodes 0])
+  (filter #(graph/is-terminal? %)
+          (:nodes sample-expanded-g))
+  (graph/evaluate (get-in sample-expanded-g [:nodes 11100]))
+  (graph/is-terminal? (get-in sample-expanded-g [:nodes 11100]))
+  (Math/abs 0)
 
-(def a (dge 3 3 [-1 -1 0 0 -1 0 -1 0 -1]
-            {:layout :row}))
+  (= (* 3 3) 9.0)
+  (subvec (into [] (range 10000))
 
-(sum (fmap abs a))
-(mv a x)
+          (min 10000
+               (max (count (into [] (range 10000))) 0)))
 
-(dot (mv a x) e3)
+  (def x (dv 1 1 1))
 
-(sum (dia (mm (get-anti-diagonal-for-dim 3) a)))
-(sum (dia a))
+  (def e1 (dv 1 0 0))
+  (def e2 (dv 0 1 0))
+  (def e3 (dv 0 0 1))
 
-(def anti-diagonal (dge 2 2 [[0 1] [1 0]] {:layout :row}))
+  (def a (dge 3 3 [-1 -1 0 0 -1 0 -1 0 -1]
+              {:layout :row}))
 
-(defn get-anti-diagonal-for-dim [dim]
-  (dge dim dim
-      (for [n (range dim)]
-        (assoc (into [] (repeat dim 0)) (- dim 1 n) 1))
-      {:layout :row}))
+  (sum (fmap abs a))
+  (mv a x)
 
-(clojure.pprint/pprint (get-anti-diagonal-for-dim 100))
+  (dot (mv a x) e3)
 
-(dot (mv (trans a) x) e3)
+  (sum (dia (mm (get-anti-diagonal-for-dim 3) a)))
+  (sum (dia a))
+
+  (def anti-diagonal (dge 2 2 [[0 1] [1 0]] {:layout :row}))
+
+  (clojure.pprint/pprint (get-anti-diagonal-for-dim 100))
+
+  (dot (mv (trans a) x) e3))

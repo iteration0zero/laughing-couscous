@@ -1,7 +1,9 @@
 {:deps {org.clojure/clojure {:mvn/version "1.10.3"}
         uncomplicate/neanderthal {:mvn/version "0.43.3"
                                   :exclusions [org.jcuda/jcuda-natives
-                                               org.jcuda/jcublas-natives]}}
+                                               org.jcuda/jcublas-natives]}
+        tesser.core/tesser.core {:mvn/version "1.0.4"}
+        tech.droit/fset {:mvn/version "0.1.1"}}
  :mvn/repos
  {"central" {:url "https://repo1.maven.org/maven2/"}
   "clojars" {:url "https://clojars.org/repo"}}}
