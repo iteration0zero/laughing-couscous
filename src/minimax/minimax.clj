@@ -23,7 +23,7 @@
   (->> (t/map (fn [idx]
                 [idx (get (:nodes g) idx)]))
        (t/filter (fn [[idx node]]
-                   (not (graph/is-terminal? node))))   
+                   (not (graph/is-terminal? node))))
        (t/mapcat (fn [[idx node]]
                    (let [children
                           (doall

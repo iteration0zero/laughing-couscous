@@ -2,12 +2,13 @@
   (:gen-class)
   (:require [minimax.graph :as graph :refer [state evaluate]]
             [minimax.minimax :as minimax]
+            [minimax.player :as player]
             [uncomplicate.fluokitten.core :refer [fmap]]
             [tangle.core :as tangle]
             [rhizome.viz :as viz])
   (:use [uncomplicate.neanderthal core native math]))
 
-(defrecord SampleMinimaxNode [board player])
+(defrecord SampleMinimaxNode [board player last-move])
 
 (extend SampleMinimaxNode
         graph/IState
@@ -29,7 +30,8 @@
                           (map (fn [[y x]]
                                  (->SampleMinimaxNode
                                   (:board (assoc-in (state this) [:board y x] (:player (state this))))
-                                  (* (:player (state this)) -1)))))
+                                  (* (:player (state this)) -1)
+                                  [y x]))))
                     (for [y (range n)
                           x (range n)]
                       [y x])))
@@ -94,8 +96,10 @@
                              [[0 0 0]
                               [0 0 0]
                               [0 0 0]]
-                             1)
+                             1
+                             nil)
                            :v -1))
+
 
 (def sample-g
   {:nodes [tictactoe-root]
@@ -113,8 +117,20 @@
    :leaf-indices [0]})
 
 (comment
+  (def player (player/get-player sample-g))
+  (deref player)
   (minimax/expand sample-g)
-
+  (send player player/expand-player-by 5)
+  (send player player/opp-move
+               (fn [n [y x]]
+                 {:g {:nodes [(-> n
+                                  (update :board assoc-in [y x] (:player n))
+                                  (update :player * -1))]
+                      :edges {}
+                      :leaf-indices [0]}
+                  :state-idx 0
+                  :move nil})
+               [1 1])
   (minimax/expand test-g)
   (last (take 10 (iterate minimax/expand sample-expanded-g)))
 
@@ -122,7 +138,6 @@
   (let [first-n-nodes (map (fn [i]
                              [i (get (:nodes sample-expanded-g) i)])
                            (range 1000))]
-    (println first-n-nodes)
     (viz/view-graph first-n-nodes
                     (fn [[i n]]
                       (reduce (fn [acc [i1 i2]]
