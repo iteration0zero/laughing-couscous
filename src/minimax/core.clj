@@ -2,7 +2,9 @@
   (:gen-class)
   (:require [minimax.graph :as graph :refer [state evaluate]]
             [minimax.minimax :as minimax]
-            [uncomplicate.fluokitten.core :refer [fmap]])
+            [uncomplicate.fluokitten.core :refer [fmap]]
+            [tangle.core :as tangle]
+            [rhizome.viz :as viz])
   (:use [uncomplicate.neanderthal core native math]))
 
 (defrecord SampleMinimaxNode [board player])
@@ -117,7 +119,30 @@
   (last (take 10 (iterate minimax/expand sample-expanded-g)))
 
   (def sample-expanded-g *1)
-
+  (let [first-n-nodes (map (fn [i]
+                             [i (get (:nodes sample-expanded-g) i)])
+                           (range 1000))]
+    (println first-n-nodes)
+    (viz/view-graph first-n-nodes
+                    (fn [[i n]]
+                      (reduce (fn [acc [i1 i2]]
+                                (if (= i i2)
+                                  (conj acc [i1 (get (:nodes sample-expanded-g) i1)])
+                                  acc))
+                              []
+                              (:edges sample-expanded-g)))
+                    :node->descriptor (fn [[i n]] {:label (apply str
+                                                                 (into [(:player n) "\n"]
+                                                                       (concat
+                                                                         (interleave (:board n) (repeat "\n"))
+                                                                         [(:v n)])))})))
+  (tangle/dot->svg gdot)
+  (vec #{:a :b})
+  (def i (tangle/dot->image gdot "png"))
+  (tangle/dot->image gdot "png")
+  (javax.imageio.ImageIO/read i)
+  (viz/view-image (javax.imageio.ImageIO/read i))
+  gdot
   (get-in sample-expanded-g [:nodes 0])
   (filter #(graph/is-terminal? %)
           (:nodes sample-expanded-g))

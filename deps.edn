@@ -3,7 +3,9 @@
                                   :exclusions [org.jcuda/jcuda-natives
                                                org.jcuda/jcublas-natives]}
         tesser.core/tesser.core {:mvn/version "1.0.4"}
-        tech.droit/fset {:mvn/version "0.1.1"}}
+        tech.droit/fset {:mvn/version "0.1.1"}
+        macroz/tangle {:mvn/version "0.2.2"}
+        rhizome/rhizome {:mvn/version "0.2.9"}}
  :mvn/repos
  {"central" {:url "https://repo1.maven.org/maven2/"}
   "clojars" {:url "https://clojars.org/repo"}}}
