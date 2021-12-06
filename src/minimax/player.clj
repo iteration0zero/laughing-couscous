@@ -40,10 +40,11 @@
                       (:edges g))]
           (first (first (filter #(= (:last-move (second %)) [y x]) children))))]
     (if new-state-idx
-      {:g g
-       :state-idx new-state-idx
-       :move (make-move g new-state-idx)
-       :moves-to-process (dec moves-to-process)}
+      (assoc p
+             :g g
+             :state-idx new-state-idx
+             :move (make-move g new-state-idx)
+             :moves-to-process (dec moves-to-process))
       (new-g-fn (get-in g [:nodes state-idx]) [y x]))))
 
 (defn get-player [g]
