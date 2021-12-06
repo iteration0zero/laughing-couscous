@@ -18,14 +18,16 @@
 
 (defn expand-player-by [p n]
   (let [new-g (last (take n (iterate minimax/expand (:g p))))]
-    {:g new-g
-     :state-idx (:state-idx p)
-     :move (make-move new-g (:state-idx p))}))
+    (assoc p
+           :g new-g
+           :state-idx (:state-idx p)
+           :move (make-move new-g (:state-idx p)))))
 
 (defn move-player-to-state [p s]
-  {:g (:g p)
-   :state-idx s
-   :move (make-move (:g p) s)})
+  (assoc p
+         :g (:g p)
+         :state-idx s
+         :move (make-move (:g p) s)))
 
 (defn opp-move [p new-g-fn [y x]]
   (let [{:keys [g state-idx moves-to-process]} p
