@@ -100,19 +100,8 @@
                              nil)
                            :v -1))
 
-
 (def sample-g
   {:nodes [tictactoe-root]
-   :edges {}
-   :leaf-indices [0]})
-
-(def test-g
-  {:nodes [(assoc (->SampleMinimaxNode
-                    [[0 1 0]
-                     [0 1 0]
-                     [0 0 0]]
-                    1)
-                  :v -1)]
    :edges {}
    :leaf-indices [0]})
 

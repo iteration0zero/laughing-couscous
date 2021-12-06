@@ -28,7 +28,8 @@
    :move (make-move (:g p) s)})
 
 (defn opp-move [p new-g-fn [y x]]
-  (let [{:keys [g state-idx]} p
+  (let [{:keys [g state-idx moves-to-process]} p
+        moves-to-process (or moves-to-process 0)
         new-state-idx
         (let [children
               (reduce (fn [acc [i1 i2]]
@@ -41,7 +42,8 @@
     (if new-state-idx
       {:g g
        :state-idx new-state-idx
-       :move (make-move g new-state-idx)}
+       :move (make-move g new-state-idx)
+       :moves-to-process (dec moves-to-process)}
       (new-g-fn (get-in g [:nodes state-idx]) [y x]))))
 
 (defn get-player [g]
