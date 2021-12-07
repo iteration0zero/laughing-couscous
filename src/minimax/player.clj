@@ -2,12 +2,12 @@
   (:require [minimax.graph :as graph]
             [minimax.minimax :as minimax]))
 
-(defn make-move [g state-idx]
+(defn make-move [{:keys [g state-idx] :as p}]
   (let [children-indices (get-in g [:edges :down state-idx])]
     (assoc p
            :g (:g p)
            :state-idx
-           (first (sort-by (fn [c]
+           (first (sort-by (fn [c-idx]
                              (let [c (get-in g [:nodes c-idx])]
                                (* (:player (get-in g [:nodes state-idx]))
                                   (:v c))))
