@@ -3,21 +3,32 @@
   (:require [minimax.graph :as graph]
             [tesser.core :as t]))
 
-(defn propagate-v [g [parent-idx node]]
-  (let [v (:v node)]
-    (loop [g g
-           [parent-idx node] [parent-idx node]]
-      (if (and parent-idx
-               (> (* (get-in g [:nodes parent-idx :player])
-                     v)
-                  (* (get-in g [:nodes parent-idx :player])
-                     (get-in g [:nodes parent-idx :v]))))
-        (recur
-          (assoc-in g
-                    [:nodes parent-idx :v]
-                    v)
-          [(get-in g [:edges parent-idx]) (get-in g [:nodes parent-idx])])
-        g))))
+(defn propagate-v
+  ([g current-idx]
+   (propagate-v g current-idx (get-in g [:edges :up current-idx])))
+  ([g current-idx parent-idx]
+   (let [node (get-in g [:nodes current-idx])
+         children (get-in g [:edges :down current-idx])
+         children (if (coll? children)
+                    children
+                    [current-idx])
+         children-v (->> children
+                         (map (fn [c]
+                                (:v (get-in g [:nodes c]))))
+                         (map (partial *
+                                       (get-in g [:nodes current-idx :player]))))
+         children-max (apply max children-v)
+         new-g (assoc-in g
+                         [:nodes current-idx :v]
+                         (* (:player node)
+                            children-max))]
+     (if (and parent-idx
+              (not= g new-g))
+       (recur
+         new-g
+         parent-idx
+         (get-in g [:edges :up parent-idx]))
+       new-g))))
 
 (defn expand [g]
   (->> (t/map (fn [idx]
@@ -44,10 +55,18 @@
                             ([g] g)
                             ([g [parent-idx node]]
                              (-> g
-                                 (propagate-v [parent-idx node])
                                  (update :nodes conj node)
-                                 (update :edges assoc (count (:nodes g)) parent-idx)
-                                 (update :leaf-indices conj (count (:nodes g))))))
+                                 (update-in [:edges :up]
+                                            assoc
+                                            (count (:nodes g))
+                                            parent-idx)
+                                 (update-in [:edges :down]
+                                            update
+                                            parent-idx
+                                            (fn [c n] (conj (or c []) n))
+                                            (count (:nodes g)))
+                                 (update :leaf-indices conj (count (:nodes g)))
+                                 (propagate-v parent-idx))))
                 :combiner-identity (constantly (update g :leaf-indices subvec (min 10000
                                                                                    (max (count (:leaf-indices g)) 0))))
                 :combiner (fn [_ g2]

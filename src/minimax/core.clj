@@ -105,6 +105,17 @@
    :edges {}
    :leaf-indices [0]})
 
+(def test-g
+  {:nodes [(assoc (->SampleMinimaxNode
+                    [[-1 1 -1]
+                     [1 1 -1]
+                     [0 0 1]]
+                    -1
+                    nil)
+                  :v 1)]
+   :edges {}
+   :leaf-indices [0]})
+
 (comment
   (def player (player/get-player sample-g))
   (deref player)
@@ -121,20 +132,20 @@
                   :move nil})
                [1 1])
   (minimax/expand test-g)
-  (last (take 10 (iterate minimax/expand sample-expanded-g)))
-
+  (last (take 2 (iterate minimax/expand sample-expanded-g)))
+  (apply max (map identity nil))
+  (minimax/expand sample-expanded-g)
   (def sample-expanded-g *1)
   (let [first-n-nodes (map (fn [i]
                              [i (get (:nodes sample-expanded-g) i)])
-                           (range 1000))]
+                           (range 10))
+        first-n-nodes (filter #(not (nil? (second %)))
+                              first-n-nodes)]
     (viz/view-graph first-n-nodes
                     (fn [[i n]]
-                      (reduce (fn [acc [i1 i2]]
-                                (if (= i i2)
-                                  (conj acc [i1 (get (:nodes sample-expanded-g) i1)])
-                                  acc))
-                              []
-                              (:edges sample-expanded-g)))
+                      [(get-in sample-expanded-g [:edges :down i])
+                       (get-in sample-expanded-g [:nodes
+                                                  (get-in sample-expanded-g [:edges :down i])])])
                     :node->descriptor (fn [[i n]] {:label (apply str
                                                                  (into [(:player n) "\n"]
                                                                        (concat
@@ -154,6 +165,7 @@
   (graph/is-terminal? (get-in sample-expanded-g [:nodes 11100]))
   (Math/abs 0)
 
+  (conj nil 5)
   (= (* 3 3) 9.0)
   (subvec (into [] (range 10000))
 
