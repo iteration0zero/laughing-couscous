@@ -3,13 +3,10 @@
             [minimax.minimax :as minimax]))
 
 (defn make-move [g state-idx]
-  (let [children
-        (reduce (fn [acc [i1 i2]]
-                  (if (= state-idx i2)
-                    (conj acc (get (:nodes g) i1))
-                    acc))
-                []
-                (:edges g))]
+  (let [children-indices (get-in g [:edges :down state-idx])
+        children (map (fn [c-idx]
+                        (get-in g [:nodes c-idx]))
+                      children-indices)]
     (first (sort-by (fn [c]
                       (* (:player (get-in g [:nodes state-idx]))
                          (:v c)))
@@ -32,9 +29,11 @@
 (defn opp-move [p new-g-fn [y x]]
   (let [{:keys [g state-idx moves-to-process]} p
         new-state-idx
-        (let [children
-              (get-in g [:edges :down state-idx])]
-          (first (first (filter #(= (:last-move (second %)) [y x]) children))))]
+        (let [children-indices (get-in g [:edges :down state-idx])
+              children (map (fn [c-idx]
+                              (get-in g [:nodes c-idx]))
+                            children-indices)]
+          (first (first (filter #(= (:last-move %) [y x]) children))))]
     (if new-state-idx
       (assoc p
              :g g
