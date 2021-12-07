@@ -120,7 +120,7 @@
   (def player (player/get-player sample-g))
   (deref player)
   (minimax/expand sample-g)
-  (send player player/expand-player-by 5)
+  (send player player/expand-player-by 10)
   (send player player/opp-move
                (fn [n [y x]]
                  {:g {:nodes [(-> n

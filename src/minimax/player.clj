@@ -33,13 +33,14 @@
          :move (make-move (:g p) s)))
 
 (defn opp-move [p new-g-fn [y x]]
-  (let [{:keys [g state-idx moves-to-process]} p
+  (println "opp move")
+  (let [{:keys [g state-idx]} p
         new-state-idx
-        (let [children-indices (get-in g [:edges :down state-idx])
-              children (map (fn [c-idx]
-                              (get-in g [:nodes c-idx]))
-                            children-indices)]
-          (first (first (filter #(= (:last-move %) [y x]) children))))]
+        (let [children-indices (get-in g [:edges :down state-idx])]
+          (first (filter (fn [c-idx]
+                           (let [c (get-in g [:nodes c-idx])]
+                             (= (:last-move c) [y x])))
+                         children-indices)))]
     (if new-state-idx
       (assoc p
              :g g
