@@ -34,12 +34,7 @@
         moves-to-process (or moves-to-process 0)
         new-state-idx
         (let [children
-              (reduce (fn [acc [i1 i2]]
-                        (if (= state-idx i2)
-                          (conj acc [i1 (get (:nodes g) i1)])
-                          acc))
-                      []
-                      (:edges g))]
+              (get-in g :edges :down state-idx)]
           (first (first (filter #(= (:last-move (second %)) [y x]) children))))]
     (if new-state-idx
       (assoc p
