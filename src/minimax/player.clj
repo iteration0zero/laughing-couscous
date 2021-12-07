@@ -26,7 +26,6 @@
          :state-idx s))
 
 (defn opp-move [p new-g-fn [y x]]
-  (println "opp move")
   (let [{:keys [g state-idx]} p
         new-state-idx
         (let [children-indices (get-in g [:edges :down state-idx])]
@@ -36,7 +35,6 @@
                          children-indices)))]
     (if new-state-idx
       (assoc p
-             :g g
              :state-idx new-state-idx)
       (new-g-fn (get-in g [:nodes state-idx]) [y x]))))
 

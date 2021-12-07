@@ -120,8 +120,8 @@
   (def player (player/get-player sample-g))
   (deref player)
   (minimax/expand sample-g)
-  (send player player/expand-player-by 10)
-  (send player player/opp-move
+  (swap! player player/expand-player-by 10)
+  (swap! player player/opp-move
                (fn [n [y x]]
                  {:g {:nodes [(-> n
                                   (update :board assoc-in [y x] (:player n))
@@ -130,7 +130,9 @@
                       :leaf-indices [0]}
                   :state-idx 0
                   :move nil})
-               [1 1])
+               [1 0])
+  (swap! player player/make-move)
+  (get-in @player [:g :nodes (:state-idx @player) :board])
   (minimax/expand test-g)
   (last (take 2 (iterate minimax/expand sample-expanded-g)))
   (apply max (map identity nil))
