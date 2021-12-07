@@ -7,6 +7,12 @@
         children (map (fn [c-idx]
                         (get-in g [:nodes c-idx]))
                       children-indices)]
+    (println "make move children: " children)
+    (println (first (sort-by (fn [c]
+                               (* (:player (get-in g [:nodes state-idx]))
+                                  (:v c)))
+                             >
+                             children)))
     (first (sort-by (fn [c]
                       (* (:player (get-in g [:nodes state-idx]))
                          (:v c)))
