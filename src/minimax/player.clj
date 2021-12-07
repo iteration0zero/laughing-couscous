@@ -49,7 +49,7 @@
       (new-g-fn (get-in g [:nodes state-idx]) [y x]))))
 
 (defn get-player [g]
-  (let [player (agent {:g g
-                       :state-idx 0
-                       :move (make-move g 0)})]
+  (let [player (atom {:g g
+                      :state-idx 0
+                      :move (make-move g 0)})]
     player))
