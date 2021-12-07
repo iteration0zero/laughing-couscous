@@ -3,34 +3,27 @@
             [minimax.minimax :as minimax]))
 
 (defn make-move [g state-idx]
-  (let [children-indices (get-in g [:edges :down state-idx])
-        children (map (fn [c-idx]
-                        (get-in g [:nodes c-idx]))
-                      children-indices)]
-    (println "make move children: " children)
-    (println (first (sort-by (fn [c]
+  (let [children-indices (get-in g [:edges :down state-idx])]
+    (assoc p
+           :g (:g p)
+           :state-idx
+           (first (sort-by (fn [c]
+                             (let [c (get-in g [:nodes c-idx])]
                                (* (:player (get-in g [:nodes state-idx]))
-                                  (:v c)))
-                             >
-                             children)))
-    (first (sort-by (fn [c]
-                      (* (:player (get-in g [:nodes state-idx]))
-                         (:v c)))
-                    >
-                    children))))
+                                  (:v c))))
+                           >
+                           children-indices)))))
 
 (defn expand-player-by [p n]
   (let [new-g (last (take n (iterate minimax/expand (:g p))))]
     (assoc p
            :g new-g
-           :state-idx (:state-idx p)
-           :move (make-move new-g (:state-idx p)))))
+           :state-idx (:state-idx p))))
 
 (defn move-player-to-state [p s]
   (assoc p
          :g (:g p)
-         :state-idx s
-         :move (make-move (:g p) s)))
+         :state-idx s))
 
 (defn opp-move [p new-g-fn [y x]]
   (println "opp move")
@@ -44,12 +37,10 @@
     (if new-state-idx
       (assoc p
              :g g
-             :state-idx new-state-idx
-             :move (make-move g new-state-idx))
+             :state-idx new-state-idx)
       (new-g-fn (get-in g [:nodes state-idx]) [y x]))))
 
 (defn get-player [g]
   (let [player (atom {:g g
-                      :state-idx 0
-                      :move (make-move g 0)})]
+                      :state-idx 0})]
     player))
