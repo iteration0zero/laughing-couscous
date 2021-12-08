@@ -3,7 +3,15 @@
             [minimax.minimax :as minimax]))
 
 (defn make-move [{:keys [g state-idx] :as p}]
+  (println "making move: " state-idx)
   (let [children-indices (get-in g [:edges :down state-idx])]
+    (println "children-indices: " children-indices)
+    (println (sort-by (fn [c-idx]
+                        (let [c (get-in g [:nodes c-idx])]
+                          (* (:player (get-in g [:nodes state-idx]))
+                             (:v c))))
+                      >
+                      children-indices))
     (assoc p
            :g (:g p)
            :state-idx

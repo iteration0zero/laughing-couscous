@@ -5,7 +5,8 @@
             [minimax.player :as player]
             [uncomplicate.fluokitten.core :refer [fmap]]
             [tangle.core :as tangle]
-            [rhizome.viz :as viz])
+            [rhizome.viz :as viz]
+            [clojure.core.async :as async])
   (:use [uncomplicate.neanderthal core native math]))
 
 (defrecord SampleMinimaxNode [board player last-move])
@@ -118,20 +119,29 @@
 
 (comment
   (def player (player/get-player sample-g))
+  (def player (player/get-player sample-expanded-g))
   (deref player)
   (minimax/expand sample-g)
-  (swap! player player/expand-player-by 2)
-  (swap! player player/opp-move
-               (fn [n [y x]]
-                 {:g {:nodes [(-> n
-                                  (update :board assoc-in [y x] (:player n))
-                                  (update :player * -1))]
-                      :edges {}
-                      :leaf-indices [0]}
-                  :state-idx 0
-                  :move nil})
-               [1 0])
-  (swap! player player/make-move)
+  (async/thread
+    (dotimes [n 20]
+             (swap! player player/expand-player-by 25))
+    (println "done!"))
+  (async/thread (swap! player player/opp-move
+                             (fn [n [y x]]
+                               {:g {:nodes [(-> n
+                                                (update :board assoc-in [y x] (:player n))
+                                                (update :player * -1))]
+                                    :edges {}
+                                    :leaf-indices [0]}
+                                :state-idx 0
+                                :move nil})
+                             [1 0])
+                (println "done!"))
+
+  (async/thread (swap! player assoc :state-idx 0)
+                (println "done!"))
+  (async/thread (swap! player player/make-move)
+                (println "done!"))
   (get-in @player [:g :nodes (:state-idx @player) :board])
   (map (fn [c-idx] (get-in @player [:g :nodes c-idx]))
        (get-in @player [:g :edges :down (:state-idx @player)]))
