@@ -33,8 +33,6 @@
 (defn expand [g]
   (->> (t/map (fn [idx]
                 [idx (get (:nodes g) idx)]))
-       (t/filter (fn [[idx node]]
-                   (not (graph/is-terminal? node))))
        (t/mapcat (fn [[idx node]]
                    (let [children
                           (doall
@@ -69,7 +67,8 @@
                                  (propagate-v parent-idx))))
                 :combiner-identity (constantly (update g :leaf-indices subvec (min 10000
                                                                                    (max (count (:leaf-indices g)) 0))))
-                :combiner (fn [_ g2]
+                :combiner (fn [g1 g2]
+                            (println "combining " (count (:nodes g1)) (count (:nodes g2)))
                             g2)})
        (t/tesser (t/chunk 512 (subvec (:leaf-indices g) 0 (min 10000
                                                                (max (count (:leaf-indices g)) 0)))))))
