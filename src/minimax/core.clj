@@ -120,7 +120,7 @@
   (def player (player/get-player sample-g))
   (deref player)
   (minimax/expand sample-g)
-  (swap! player player/expand-player-by 10)
+  (swap! player player/expand-player-by 2)
   (swap! player player/opp-move
                (fn [n [y x]]
                  {:g {:nodes [(-> n
@@ -140,7 +140,7 @@
   (get-in @player [:g :nodes (:state-idx @player)])
   (count (get-in @player [:g :nodes]))
   (minimax/expand test-g)
-  (last (take 2 (iterate minimax/expand sample-expanded-g)))
+  (last (take 10 (iterate minimax/expand sample-expanded-g)))
   (apply max (map identity nil))
   (minimax/expand sample-expanded-g)
   (def sample-expanded-g *1)
