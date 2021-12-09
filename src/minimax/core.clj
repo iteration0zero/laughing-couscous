@@ -40,12 +40,12 @@
               (or
                 (= 1.0 (Math/abs (evaluate this)))
                 (let [board-size (count (:board (state this)))
-                      board-matrix (ge board-size board-size (:board (state this)))]
+                      board-matrix (dge board-size board-size (:board (state this)))]
                   (= (* board-size board-size 1.0)
                      (sum (fmap abs board-matrix))))))}))
 
 (defn get-anti-diagonal-for-dim [dim]
-  (ge dim dim
+  (dge dim dim
       (for [n (range dim)]
         (assoc (into [] (repeat dim 0)) (- dim 1 n) 1))
       {:layout :row}))
@@ -65,11 +65,11 @@
             (fn [this]
               (let [
                     board-size (count (:board (state this)))
-                    board-matrix (ge board-size board-size (:board (state this)))
+                    board-matrix (dge board-size board-size (:board (state this)))
                     board-submatrices (get-submatrices board-matrix n)
-                    row-v (vctr double-factory (repeat n 1))
-                    column-vs (doall (map vctr double-factory (for [m (range n)])
-                                               (assoc (into [] (repeat n 0)) (- n 1 m) 1)))
+                    row-v (dv (repeat n 1))
+                    column-vs (doall (map dv (for [m (range n)]
+                                               (assoc (into [] (repeat n 0)) (- n 1 m) 1))))
                     anti-diagonal (get-anti-diagonal-for-dim n)
                     submatrix-checks
                     (doall (map (fn [board-submatrix]
@@ -192,13 +192,13 @@
           (min 10000
                (max (count (into [] (range 10000))) 0)))
 
-  (def x (vctr double-factory 1 1 1))
+  (def x (dv 1 1 1))
 
-  (def e1 (vctr double-factory 1 0 0))
-  (def e2 (vctr double-factory 0 1 0))
-  (def e3 (vctr double-factory 0 0 1))
+  (def e1 (dv 1 0 0))
+  (def e2 (dv 0 1 0))
+  (def e3 (dv 0 0 1))
 
-  (def a (ge 3 3 [-1 -1 0 0 -1 0 -1 0 -1]
+  (def a (dge 3 3 [-1 -1 0 0 -1 0 -1 0 -1]
               {:layout :row}))
 
   (sum (fmap abs a))
@@ -209,7 +209,7 @@
   (sum (dia (mm (get-anti-diagonal-for-dim 3) a)))
   (sum (dia a))
 
-  (def anti-diagonal (ge 2 2 [[0 1] [1 0]] {:layout :row}))
+  (def anti-diagonal (dge 2 2 [[0 1] [1 0]] {:layout :row}))
 
   (clojure.pprint/pprint (get-anti-diagonal-for-dim 100))
 
