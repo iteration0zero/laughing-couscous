@@ -123,8 +123,8 @@
   (deref player)
   (minimax/expand sample-g)
   (async/thread
-    (dotimes [n 20]
-             (swap! player player/expand-player-by 25))
+    (dotimes [n 1]
+             (swap! player player/expand-player-by 5))
     (println "done!"))
   (async/thread (swap! player player/opp-move
                              (fn [n [y x]]
@@ -135,7 +135,7 @@
                                     :leaf-indices [0]}
                                 :state-idx 0
                                 :move nil})
-                             [1 0])
+                             [0 2])
                 (println "done!"))
 
   (async/thread (swap! player assoc :state-idx 0)
@@ -143,6 +143,8 @@
   (async/thread (swap! player player/make-move)
                 (println "done!"))
   (get-in @player [:g :nodes (:state-idx @player) :board])
+  (get @player :g)
+  (spit "resources/ttt_minimax.edn" (pr-str *1))
   (map (fn [c-idx] (get-in @player [:g :nodes c-idx]))
        (get-in @player [:g :edges :down (:state-idx @player)]))
   (get-in @player [:g :edges :down])

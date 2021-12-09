@@ -34,32 +34,39 @@
        new-g))))
 
 (defn add-node [g [parent-idx node]]
-  (-> g
-      (update :nodes conj node)
-      (update-in [:edges :up]
-                 assoc
-                 (count (:nodes g))
-                 parent-idx)
-      (update-in [:edges :down]
-                 update
-                 parent-idx
-                 (fn [c n] (conj (or c []) n))
-                 (count (:nodes g)))
-      (update :leaf-indices conj (count (:nodes g)))
-      (propagate-v parent-idx)))
+  (let [parent-node-level (or (get-in g [:nodes parent-idx :level])
+                              0)
+        g (-> g
+              (update :nodes conj (assoc node
+                                         :level
+                                         (inc parent-node-level)))
+              (update-in [:edges :up]
+                         assoc
+                         (count (:nodes g))
+                         parent-idx)
+              (update-in [:edges :down]
+                         update
+                         parent-idx
+                         (fn [c n] (conj (or c []) n))
+                         (count (:nodes g)))
+              (update :leaf-indices conj (count (:nodes g))))
+        g (-> g
+             (update :leaf-indices
+                     #(into []
+                            (sort-by (comp :level (fn [i]
+                                                    (get-in g [:nodes i])))
+                                     <
+                                     %)))
+             (propagate-v parent-idx))]
+     g))
 
 (defn expand [g]
   (let [leaf-indices-cutoff (min 20000
                                  (max (count (:leaf-indices g)) 0))
-        g (assoc g :leaf-indices
-                   (reduce (fn [c i]
-                             (conj c i))
-                           []
-                           (range leaf-indices-cutoff (count (:leaf-indices g)))))
-        leaf-indices (reduce (fn [c i]
-                               (conj c i))
-                             []
-                             (range leaf-indices-cutoff))
+        leaf-indices (subvec (:leaf-indices g) 0 leaf-indices-cutoff)
+        g (update g :leaf-indices
+                   subvec
+                   leaf-indices-cutoff)
         cf (fn
              ([] g)
              ([g1 g2]
@@ -72,18 +79,49 @@
                 (reduce add-node
                         g1
                         added-nodes-with-parent))))
-        g (->> leaf-indices
-               (r/map (fn [idx]
+        g #_(->> leaf-indices
+                 (r/map (fn [idx]
+                          [idx (get (:nodes g) idx)]))
+                 (r/filter (fn [[idx node]]
+                             (not (graph/is-terminal? node))))
+                 (r/mapcat (fn [[idx node]]
+                              (let [children
+                                     (doall
+                                       (map (fn [child]
+                                              [idx (assoc child :v (graph/evaluate child))])
+                                            (graph/expand node)))
+                                    max-eval-state (first (filter #(= 1.0
+                                                                      (* (:v (second %))
+                                                                         (:player node)))
+                                                                  children))]
+                                (if max-eval-state
+                                  [max-eval-state]
+                                  children))))
+                 (r/map (partial add-node g))
+                 (r/fold cf))
+          (->> (t/map (fn [idx]
                         [idx (get (:nodes g) idx)]))
-               (r/mapcat (fn [[idx node]]
+               (t/filter (fn [[idx node]]
+                           (not (graph/is-terminal? node))))
+               (t/mapcat (fn [[idx node]]
                             (let [children
                                    (doall
                                      (map (fn [child]
                                             [idx (assoc child :v (graph/evaluate child))])
-                                          (graph/expand node)))]
-                              children)))
-               (r/map (partial add-node g))
-               (r/fold cf))]
+                                          (graph/expand node)))
+                                  max-eval-state (first (filter #(= 1.0
+                                                                    (* (:v (second %))
+                                                                       (:player node)))
+                                                                children))]
+                              (if max-eval-state
+                                [max-eval-state]
+                                children))))
+               (t/map (partial add-node g))
+               (t/fold {:reducer-identity (constantly g)
+                        :reducer cf
+                        :combiner-identity (constantly g)
+                        :combine cf})
+               (t/tesser (t/chunk 2048 leaf-indices)))]
     g))
 
 
