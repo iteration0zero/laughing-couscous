@@ -5,9 +5,8 @@
             [minimax.player :as player]
             [uncomplicate.fluokitten.core :refer [fmap]]
             [tangle.core :as tangle]
-            [rhizome.viz :as viz]
             [clojure.core.async :as async])
-  (:use [uncomplicate.neanderthal core native math]))
+  (:use [uncomplicate.neanderthal core math native]))
 
 (defrecord SampleMinimaxNode [board player last-move])
 
@@ -41,12 +40,12 @@
               (or
                 (= 1.0 (Math/abs (evaluate this)))
                 (let [board-size (count (:board (state this)))
-                      board-matrix (dge board-size board-size (:board (state this)))]
+                      board-matrix (ge board-size board-size (:board (state this)))]
                   (= (* board-size board-size 1.0)
                      (sum (fmap abs board-matrix))))))}))
 
 (defn get-anti-diagonal-for-dim [dim]
-  (dge dim dim
+  (ge dim dim
       (for [n (range dim)]
         (assoc (into [] (repeat dim 0)) (- dim 1 n) 1))
       {:layout :row}))
@@ -66,11 +65,11 @@
             (fn [this]
               (let [
                     board-size (count (:board (state this)))
-                    board-matrix (dge board-size board-size (:board (state this)))
+                    board-matrix (ge board-size board-size (:board (state this)))
                     board-submatrices (get-submatrices board-matrix n)
-                    row-v (dv (repeat n 1))
-                    column-vs (doall (map dv (for [m (range n)]
-                                               (assoc (into [] (repeat n 0)) (- n 1 m) 1))))
+                    row-v (vctr double-factory (repeat n 1))
+                    column-vs (doall (map vctr double-factory (for [m (range n)])
+                                               (assoc (into [] (repeat n 0)) (- n 1 m) 1)))
                     anti-diagonal (get-anti-diagonal-for-dim n)
                     submatrix-checks
                     (doall (map (fn [board-submatrix]
@@ -103,7 +102,7 @@
 
 (def sample-g
   {:nodes [tictactoe-root]
-   :edges {}
+   :eges {}
    :leaf-indices [0]})
 
 (def test-g
@@ -114,12 +113,13 @@
                     -1
                     nil)
                   :v 1)]
-   :edges {}
+   :eges {}
    :leaf-indices [0]})
 
 (comment
   (def player (player/get-player sample-g))
   (def player (player/get-player sample-expanded-g))
+  (def player (player/get-player (read-string (slurp "resources/ttt_minimax.edn"))))
   (deref player)
   (minimax/expand sample-g)
   (async/thread
@@ -131,7 +131,7 @@
                                {:g {:nodes [(-> n
                                                 (update :board assoc-in [y x] (:player n))
                                                 (update :player * -1))]
-                                    :edges {}
+                                    :eges {}
                                     :leaf-indices [0]}
                                 :state-idx 0
                                 :move nil})
@@ -146,8 +146,8 @@
   (get @player :g)
   (spit "resources/ttt_minimax.edn" (pr-str *1))
   (map (fn [c-idx] (get-in @player [:g :nodes c-idx]))
-       (get-in @player [:g :edges :down (:state-idx @player)]))
-  (get-in @player [:g :edges :down])
+       (get-in @player [:g :eges :down (:state-idx @player)]))
+  (get-in @player [:g :eges :down])
   (:state-idx @player)
   (get-in @player [:g :nodes (:state-idx @player)])
   (count (get-in @player [:g :nodes]))
@@ -163,9 +163,9 @@
                               first-n-nodes)]
     (viz/view-graph first-n-nodes
                     (fn [[i n]]
-                      [(get-in sample-expanded-g [:edges :down i])
+                      [(get-in sample-expanded-g [:eges :down i])
                        (get-in sample-expanded-g [:nodes
-                                                  (get-in sample-expanded-g [:edges :down i])])])
+                                                  (get-in sample-expanded-g [:eges :down i])])])
                     :node->descriptor (fn [[i n]] {:label (apply str
                                                                  (into [(:player n) "\n"]
                                                                        (concat
@@ -192,13 +192,13 @@
           (min 10000
                (max (count (into [] (range 10000))) 0)))
 
-  (def x (dv 1 1 1))
+  (def x (vctr double-factory 1 1 1))
 
-  (def e1 (dv 1 0 0))
-  (def e2 (dv 0 1 0))
-  (def e3 (dv 0 0 1))
+  (def e1 (vctr double-factory 1 0 0))
+  (def e2 (vctr double-factory 0 1 0))
+  (def e3 (vctr double-factory 0 0 1))
 
-  (def a (dge 3 3 [-1 -1 0 0 -1 0 -1 0 -1]
+  (def a (ge 3 3 [-1 -1 0 0 -1 0 -1 0 -1]
               {:layout :row}))
 
   (sum (fmap abs a))
@@ -209,7 +209,7 @@
   (sum (dia (mm (get-anti-diagonal-for-dim 3) a)))
   (sum (dia a))
 
-  (def anti-diagonal (dge 2 2 [[0 1] [1 0]] {:layout :row}))
+  (def anti-diagonal (ge 2 2 [[0 1] [1 0]] {:layout :row}))
 
   (clojure.pprint/pprint (get-anti-diagonal-for-dim 100))
 
