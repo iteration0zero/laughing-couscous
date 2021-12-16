@@ -2,8 +2,7 @@
         uncomplicate/neanderthal {:mvn/version "0.43.3"
                                   :exclusions [org.jcuda/jcuda-natives
                                                org.jcuda/jcublas-natives]}
-        
-        org.bytedeco/mkl-platform-redist {:mvn/version "2020.3-1.5.4"}
+        uncomplicate/fluokitten {:mvn/version "0.9.1"}
         tesser.core/tesser.core {:mvn/version "1.0.4"}
         tech.droit/fset {:mvn/version "0.1.1"}
         macroz/tangle {:mvn/version "0.2.2"}
